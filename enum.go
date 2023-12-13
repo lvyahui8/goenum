@@ -53,7 +53,7 @@ func NewEnum[T EnumDefinition](name string, args ...interface{}) T {
 	elem := reflect.ValueOf(&t).Elem()
 	enumFiled := elem.FieldByName(reflect.TypeOf(Enum{}).Name())
 	// 获取泛型具体类型名
-	tFullName := elem.Type().String()
+	tFullName := typeKey(elem.Type())
 	enumFiled.Set(reflect.ValueOf(Enum{name: name, _type: tFullName}))
 	type2enumsMap[tFullName] = append(type2enumsMap[tFullName], t)
 	name2enumsMap[name] = append(name2enumsMap[name], t)
@@ -73,7 +73,8 @@ func ValueOf[T EnumDefinition](name string) *T {
 func Values[T EnumDefinition]() []T {
 	var t T
 	var res []T
-	for _, e := range type2enumsMap[t.Type()] {
+	tName := typeKey(reflect.TypeOf(t))
+	for _, e := range type2enumsMap[tName] {
 		if v, ok := e.(T); ok {
 			res = append(res, v)
 		}
@@ -86,4 +87,8 @@ func EnumNames(enums ...EnumDefinition) (names []string) {
 		names = append(names, e.Name())
 	}
 	return
+}
+
+func typeKey(t reflect.Type) string {
+	return t.PkgPath() + "." + t.Name()
 }
