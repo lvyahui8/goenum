@@ -153,4 +153,4 @@ ok      github.com/lvyahui8/goenum/internal    0.097s
 
 - pkg.go.dev: https://pkg.go.dev/github.com/lvyahui8/goenum#section-readme
 - goreportcard.com: https://goreportcard.com/report/github.com/lvyahui8/goenum
-- coverage service link ([codecov](https://codecov.io/), [coveralls](https://coveralls.io/), etc.): https://app.codecov.io/gh/lvyahui8/goenum
+- coverage service link : https://app.codecov.io/gh/lvyahui8/goenum
