@@ -129,6 +129,7 @@ func Values[T EnumDefinition]() []T {
 	return res
 }
 
+// GetEnumMap 获取所有枚举，以name->enum map的形式返回
 func GetEnumMap[T EnumDefinition]() map[string]T {
 	values := Values[T]()
 	res := make(map[string]T)
@@ -146,6 +147,7 @@ func EnumNames(enums ...EnumDefinition) (names []string) {
 	return
 }
 
+// IsValidEnum 判断是否是合法的枚举
 func IsValidEnum[T EnumDefinition](name string) bool {
 	return ValueOf[T](name) != nil
 }
