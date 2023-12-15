@@ -42,6 +42,9 @@ func TestRoleBasic(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, "{\"RoleName\":\"Reporter\"}", string(bytes))
 	})
+	t.Run("String", func(t *testing.T) {
+		t.Logf("formatted stirng %s", Developer)
+	})
 }
 
 func TestHelpers(t *testing.T) {
@@ -84,11 +87,18 @@ func TestModule_BasePath(t *testing.T) {
 	require.True(t, len(MergeRequests.basePath) > 0)
 }
 
+// BenchmarkValueOf
+//  go test -bench='BenchmarkValueOf'  -benchtime=5s -benchmem -count=3
 func BenchmarkValueOf(b *testing.B) {
+	n := 1000
 	b.Run("ValueOf", func(b *testing.B) {
-		_ = goenum.ValueOf[Permission]("AddTopic")
+		for i := 0; i < n; i++ {
+			_ = goenum.ValueOf[Permission]("AddTopic")
+		}
 	})
 	b.Run("ValueOfIgnoreCase", func(b *testing.B) {
-		_ = goenum.ValueOfIgnoreCase[Permission]("AddTopic")
+		for i := 0; i < n; i++ {
+			_ = goenum.ValueOfIgnoreCase[Permission]("AddTopic")
+		}
 	})
 }

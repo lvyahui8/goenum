@@ -53,7 +53,6 @@ func (m Module) BasePath() string {
 
 type Permission struct {
 	goenum.Enum
-	module Module
 }
 
 // 定义权限
