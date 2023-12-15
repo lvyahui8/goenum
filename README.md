@@ -3,20 +3,31 @@
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 
-### 怎么定义枚举？
+### 怎么定义和使用枚举？
+
+**只需往枚举struct内嵌goenum.Enum, 即可定义一个枚举类型，并获得开箱即用的一组方法。**
 
 ```go
 import "github.com/lvyahui8/goenum"
 
+// 声明枚举类型
 type State struct {
     goenum.Enum
 }
 
+// 定义枚举
 var (
     Created = goenum.NewEnum[State]("Created")
     Running = goenum.NewEnum[State]("Running")
     Success = goenum.NewEnum[State]("Success")
 )
+
+// Usage
+Created.Name() // string "Created"
+Created.Ordinal() // int 0
+goenum.ValueOf[State]("Created") // struct instance: Created
+Created.Equals(*goenum.ValueOf[State]("Created")) // true
+goenum.Values[State]() // equals []State{Created,Running,Success}
 ```
 
 ### 实例方法
