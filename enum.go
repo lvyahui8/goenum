@@ -12,7 +12,7 @@ type EnumDefinition interface {
 	fmt.Stringer
 	// Marshaler 支持枚举序列化
 	json.Marshaler
-	// Init 枚举初始化。使用方不应该直接调用这个方法。
+	// Init 枚举初始化。使用方不应该直接调用这个方法。(即使调用也没有意义，这限定为一个值方法)
 	Init(args ...any) any
 	// Name 枚举名称，同一类型枚举应该唯一
 	Name() string
