@@ -1,5 +1,8 @@
 ## Go 通用枚举实现
 
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
+
 ### 怎么定义枚举？
 
 ```go
