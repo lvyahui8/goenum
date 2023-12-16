@@ -8,6 +8,10 @@
 
 **只需往枚举struct内嵌goenum.Enum, 即可定义一个枚举类型，并获得开箱即用的一组方法。**
 
+```shell
+go get github.com/lvyahui8/goenum
+```
+
 ```go
 import "github.com/lvyahui8/goenum"
 
