@@ -1,7 +1,8 @@
 ## Go 通用枚举实现
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/lvyahui8/goenum)](https://goreportcard.com/report/github.com/lvyahui8/goenum)
+[![codecov](https://codecov.io/gh/lvyahui8/goenum/graph/badge.svg?token=YBV3TH2HQU)](https://codecov.io/gh/lvyahui8/goenum)
 
 ### 怎么定义和使用枚举？
 
@@ -149,8 +150,3 @@ BenchmarkValueOf/ValueOfIgnoreCase-4             1000000000             0.002606
 PASS
 ok      github.com/lvyahui8/goenum/internal    0.097s
 ```
-### Others
-
-- pkg.go.dev: https://pkg.go.dev/github.com/lvyahui8/goenum#section-readme
-- goreportcard.com: https://goreportcard.com/report/github.com/lvyahui8/goenum
-- coverage service link : https://app.codecov.io/gh/lvyahui8/goenum
