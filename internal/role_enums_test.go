@@ -48,6 +48,14 @@ func TestRoleBasic(t *testing.T) {
 }
 
 func TestHelpers(t *testing.T) {
+	t.Run("NewEnum", func(t *testing.T) {
+		defer func() {
+			err := recover()
+			require.NotNil(t, err)
+			require.Equal(t, "Enum must be unique", err)
+		}()
+		_ = goenum.NewEnum[Role]("Owner")
+	})
 	t.Run("ValueOf", func(t *testing.T) {
 		require.True(t, Owner.Equals(*goenum.ValueOf[Role]("Owner")))
 		require.False(t, Developer.Equals(*goenum.ValueOf[Role]("Owner")))

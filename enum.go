@@ -75,8 +75,12 @@ var type2enumsMap = make(map[string][]EnumDefinition)
 // typeIndexMap 类型枚举索引
 var typeIndexMap = make(map[string]int)
 
-// NewEnum 新建枚举
+// NewEnum 新建枚举, 如果枚举（同类型）已经存在，则会抛出panic，禁止重复创建枚举
 func NewEnum[T EnumDefinition](name string, args ...any) T {
+	if IsValidEnum[T](name) {
+		// panic还是直接返回已有的枚举？
+		panic("Enum must be unique")
+	}
 	var t T
 	elem := reflect.ValueOf(&t).Elem()
 	enumFiled := elem.FieldByName(reflect.TypeOf(Enum{}).Name())
