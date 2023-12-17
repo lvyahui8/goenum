@@ -92,6 +92,8 @@ func TestEnumSet_Basic(t *testing.T) {
 	require.True(t, stmtSet.Len() == 0)
 }
 
+// BenchmarkUnsafeEnumSet_Contains 测试下来性能反而更差一些，原因应该是枚举数量太少，随着枚举数量的增加，map性能肯定会变差的，而EnumSet可以维持性能。
+// java EnumSet，按照是否超过64个，划分了2个实现， 估计也是这个原因
 func BenchmarkUnsafeEnumSet_Contains(b *testing.B) {
 	stmtSet := NewUnsafeEnumSet[Statement]()
 	stmtSet.Add(TypeSwitch)
