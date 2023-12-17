@@ -120,7 +120,7 @@ func ValueOfIgnoreCase[T EnumDefinition](name string) *T {
 	return nil
 }
 
-// Values 返回所有可用枚举
+// Values 返回所有可用枚举，返回slice是有序的，按照ordinal排序
 func Values[T EnumDefinition]() []T {
 	var t T
 	var res []T
@@ -131,6 +131,12 @@ func Values[T EnumDefinition]() []T {
 		}
 	}
 	return res
+}
+
+func Size[T EnumDefinition]() int {
+	var t T
+	tName := typeKey(reflect.TypeOf(t))
+	return len(type2enumsMap[tName])
 }
 
 // GetEnumMap 获取所有枚举，以name->enum map的形式返回
