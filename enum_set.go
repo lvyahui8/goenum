@@ -40,7 +40,7 @@ type EnumSet[E EnumDefinition] interface {
 	Clone() EnumSet[E]
 }
 
-func NewUnsafeEnumSet[E EnumDefinition]() EnumSet[E] {
+func NewUnsafeEnumSet[E EnumDefinition]() *UnsafeEnumSet[E] {
 	enumSize := Size[E]()
 	return &UnsafeEnumSet[E]{
 		enumSize: enumSize,
@@ -137,9 +137,7 @@ func (set *UnsafeEnumSet[E]) Clear() {
 
 func (set *UnsafeEnumSet[E]) Contains(enums ...E) bool {
 	for _, e := range enums {
-		i := e.Ordinal() >> 6
-		flag := uint64(1) << e.Ordinal()
-		if set.elements[i]&flag != flag {
+		if set.elements[e.Ordinal()>>6]&(uint64(1)<<e.Ordinal()) == 0 {
 			return false
 		}
 	}

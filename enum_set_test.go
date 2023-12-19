@@ -92,20 +92,35 @@ func TestEnumSet_Basic(t *testing.T) {
 	require.True(t, stmtSet.Len() == 0)
 }
 
-// BenchmarkUnsafeEnumSet_Contains 测试下来性能反而更差一些，原因应该是枚举数量太少，随着枚举数量的增加，map性能肯定会变差的，而EnumSet可以维持性能。
-// java EnumSet，按照是否超过64个，划分了2个实现， 估计也是这个原因
-func BenchmarkUnsafeEnumSet_Contains(b *testing.B) {
+var enumMap = GetEnumMap[Statement]()
+
+//go:noinline
+func mapContains(statements ...Statement) bool {
+	for _, stmt := range statements {
+		if _, ok := enumMap[stmt.Name()]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+var testStmts = func() *UnsafeEnumSet[Statement] {
 	stmtSet := NewUnsafeEnumSet[Statement]()
 	stmtSet.Add(TypeSwitch)
-	enumMap := GetEnumMap[Statement]()
+	return stmtSet
+}()
+
+// BenchmarkUnsafeEnumSet_Contains 之前测试性能更差的原因，是因为当将*UnsafeEnumSet转换为EnumSet（interface）之后，
+// 每次调用，都涉及到UnsafeEnumSet对象的再次创建， 这里会反复申请48B的内存(Sizeof(UnsafeEnumSet[Statement]{}))
+func BenchmarkUnsafeEnumSet_Contains(b *testing.B) {
 	b.Run("map", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_ = enumMap[TypeSwitch.Name()]
+			_ = mapContains(TypeSwitch)
 		}
 	})
 	b.Run("enumSet", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_ = stmtSet.Contains(TypeSwitch)
+			_ = testStmts.Contains(TypeSwitch)
 		}
 	})
 }
