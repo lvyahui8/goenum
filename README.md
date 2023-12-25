@@ -69,7 +69,7 @@ type EnumDefinition interface {
 - GetEnumMap 获取所有枚举，以name->enum map的形式返回
 
 - EnumNames  获取一批枚举的名称
-
+- GetEnums 根据枚举名字列表获得一批枚举
 - IsValidEnum 判断是否是合法的枚举
 
 ```go

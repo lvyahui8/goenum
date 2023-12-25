@@ -150,9 +150,17 @@ func GetEnumMap[T EnumDefinition]() map[string]T {
 }
 
 // EnumNames 获取一批枚举的名称
-func EnumNames(enums ...EnumDefinition) (names []string) {
+func EnumNames[T EnumDefinition](enums ...T) (names []string) {
 	for _, e := range enums {
 		names = append(names, e.Name())
+	}
+	return
+}
+
+// GetEnums 根据枚举名字列表获得一批枚举
+func GetEnums[T EnumDefinition](names ...string) (res []T) {
+	for _, n := range names {
+		res = append(res, *ValueOf[T](n))
 	}
 	return
 }

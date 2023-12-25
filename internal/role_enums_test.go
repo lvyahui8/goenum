@@ -77,6 +77,9 @@ func TestHelpers(t *testing.T) {
 	t.Run("EnumNames", func(t *testing.T) {
 		require.True(t, reflect.DeepEqual([]string{"Owner", "Developer"}, goenum.EnumNames(Owner, Developer)))
 	})
+	t.Run("GetEnums", func(t *testing.T) {
+		require.True(t, reflect.DeepEqual([]Role{Owner, Developer}, goenum.GetEnums[Role]("Owner", "Developer")))
+	})
 	t.Run("IsValidEnum", func(t *testing.T) {
 		require.True(t, goenum.IsValidEnum[Role]("Owner"))
 		require.False(t, goenum.IsValidEnum[Role]("Test"))
