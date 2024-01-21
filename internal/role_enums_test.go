@@ -42,6 +42,13 @@ func TestRoleBasic(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, "{\"RoleName\":\"Reporter\"}", string(bytes))
 	})
+	t.Run("textMarshal", func(t *testing.T) {
+		var m = make(map[*Role]int)
+		m[&Developer] = Developer.Ordinal()
+		bytes, err := json.Marshal(m)
+		require.Nil(t, err)
+		require.Equal(t, "{\"Developer\":1}", string(bytes))
+	})
 	t.Run("String", func(t *testing.T) {
 		t.Logf("formatted stirng %s", Developer)
 	})

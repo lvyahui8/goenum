@@ -1,6 +1,7 @@
 package goenum
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -12,6 +13,8 @@ type EnumDefinition interface {
 	fmt.Stringer
 	// Marshaler 支持枚举序列化
 	json.Marshaler
+	// TextMarshaler 支持枚举序列化
+	encoding.TextMarshaler
 	// Init 枚举初始化。使用方不应该直接调用这个方法。(即使调用也没有意义，这限定为一个值方法)
 	Init(args ...any) any
 	// Name 枚举名称，同一类型枚举应该唯一
@@ -64,6 +67,10 @@ func (e Enum) Init(args ...any) any { return e }
 
 func (e Enum) MarshalJSON() ([]byte, error) {
 	return json.Marshal(e.Name())
+}
+
+func (e Enum) MarshalText() (text []byte, err error) {
+	return []byte(e.Name()), nil
 }
 
 // name2enumsMap name到枚举实例的映射，不同的枚举，name可能冲突，所以value是slice
