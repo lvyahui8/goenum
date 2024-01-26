@@ -184,6 +184,7 @@ func GetEnums[T EnumDefinition](names ...string) (res []T, valid bool) {
 		}
 		res = append(res, t)
 	}
+	valid = true
 	return
 }
 

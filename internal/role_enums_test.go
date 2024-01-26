@@ -69,7 +69,7 @@ func TestHelpers(t *testing.T) {
 		require.True(t, valid)
 		require.True(t, Owner.Equals(r))
 		r, valid = goenum.ValueOf[Role]("Owner")
-		require.Nil(t, valid)
+		require.True(t, valid)
 		require.False(t, Developer.Equals(r))
 	})
 	t.Run("ValueOfIgnoreCase", func(t *testing.T) {
