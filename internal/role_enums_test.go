@@ -23,8 +23,8 @@ func TestRoleBasic(t *testing.T) {
 	})
 	t.Run("Equals", func(t *testing.T) {
 		// valueOf测试
-		r, err := goenum.ValueOf[Role]("Reporter")
-		require.Nil(t, err)
+		r, valid := goenum.ValueOf[Role]("Reporter")
+		require.True(t, valid)
 		require.True(t, Reporter.Equals(r))
 		require.True(t, r.Equals(r))
 		require.False(t, Developer.Equals(Reporter))
@@ -65,19 +65,19 @@ func TestHelpers(t *testing.T) {
 		_ = goenum.NewEnum[Role]("Owner")
 	})
 	t.Run("ValueOf", func(t *testing.T) {
-		r, err := goenum.ValueOf[Role]("Owner")
-		require.Nil(t, err)
+		r, valid := goenum.ValueOf[Role]("Owner")
+		require.True(t, valid)
 		require.True(t, Owner.Equals(r))
-		r, err = goenum.ValueOf[Role]("Owner")
-		require.Nil(t, err)
+		r, valid = goenum.ValueOf[Role]("Owner")
+		require.Nil(t, valid)
 		require.False(t, Developer.Equals(r))
 	})
 	t.Run("ValueOfIgnoreCase", func(t *testing.T) {
-		r, err := goenum.ValueOfIgnoreCase[Role]("oWnEr")
-		require.Nil(t, err)
+		r, valid := goenum.ValueOfIgnoreCase[Role]("oWnEr")
+		require.True(t, valid)
 		require.True(t, Owner.Equals(r))
-		r, err = goenum.ValueOfIgnoreCase[Role]("oWnEr")
-		require.Nil(t, err)
+		r, valid = goenum.ValueOfIgnoreCase[Role]("oWnEr")
+		require.True(t, valid)
 		require.False(t, Reporter.Equals(r))
 	})
 	t.Run("Values", func(t *testing.T) {
@@ -94,8 +94,8 @@ func TestHelpers(t *testing.T) {
 		require.True(t, reflect.DeepEqual([]string{"Owner", "Developer"}, goenum.EnumNames(Owner, Developer)))
 	})
 	t.Run("GetEnums", func(t *testing.T) {
-		res, err := goenum.GetEnums[Role]("Owner", "Developer")
-		require.Nil(t, err)
+		res, valid := goenum.GetEnums[Role]("Owner", "Developer")
+		require.True(t, valid)
 		require.True(t, reflect.DeepEqual([]Role{Owner, Developer}, res))
 	})
 	t.Run("IsValidEnum", func(t *testing.T) {

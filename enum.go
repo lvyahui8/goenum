@@ -3,14 +3,9 @@ package goenum
 import (
 	"encoding"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
-)
-
-var (
-	ErrEnumNotFound = errors.New("enum not found")
 )
 
 type EnumDefinition interface {
@@ -122,26 +117,24 @@ func NewEnum[T EnumDefinition](name string, src ...T) T {
 }
 
 // ValueOf 根据字符串获取枚举，如果找不到，则返回nil
-func ValueOf[T EnumDefinition](name string) (t T, err error) {
+func ValueOf[T EnumDefinition](name string) (t T, valid bool) {
 	enums := name2enumsMap[name]
 	for _, e := range enums {
 		if v, ok := e.(T); ok {
-			return v, nil
+			return v, true
 		}
 	}
-	err = ErrEnumNotFound
 	return
 }
 
 // ValueOfIgnoreCase 忽略大小写获取枚举, 涉及到一次反射调用，性能比ValueOf略差
-func ValueOfIgnoreCase[T EnumDefinition](name string) (t T, err error) {
+func ValueOfIgnoreCase[T EnumDefinition](name string) (t T, valid bool) {
 	values := Values[T]()
 	for _, e := range values {
 		if strings.EqualFold(e.Name(), name) {
-			return e, nil
+			return e, true
 		}
 	}
-	err = ErrEnumNotFound
 	return
 }
 
@@ -183,11 +176,11 @@ func EnumNames[T EnumDefinition](enums ...T) (names []string) {
 }
 
 // GetEnums 根据枚举名字列表获得一批枚举
-func GetEnums[T EnumDefinition](names ...string) (res []T, err error) {
+func GetEnums[T EnumDefinition](names ...string) (res []T, valid bool) {
 	for _, n := range names {
-		t, err := ValueOf[T](n)
-		if err != nil {
-			return nil, err
+		t, valid := ValueOf[T](n)
+		if !valid {
+			return nil, false
 		}
 		res = append(res, t)
 	}
@@ -195,9 +188,9 @@ func GetEnums[T EnumDefinition](names ...string) (res []T, err error) {
 }
 
 // IsValidEnum 判断是否是合法的枚举
-func IsValidEnum[T EnumDefinition](name string) bool {
-	_, err := ValueOf[T](name)
-	return err == nil
+func IsValidEnum[T EnumDefinition](name string) (valid bool) {
+	_, valid = ValueOf[T](name)
+	return
 }
 
 func typeKey(t reflect.Type) string {
