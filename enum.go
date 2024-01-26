@@ -3,9 +3,14 @@ package goenum
 import (
 	"encoding"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+)
+
+var (
+	ErrEnumNotFound = errors.New("enum not found")
 )
 
 type EnumDefinition interface {
@@ -15,8 +20,6 @@ type EnumDefinition interface {
 	json.Marshaler
 	// TextMarshaler 支持枚举序列化
 	encoding.TextMarshaler
-	// Init 枚举初始化。使用方不应该直接调用这个方法。(即使调用也没有意义，这限定为一个值方法)
-	Init(args ...any) any
 	// Name 枚举名称，同一类型枚举应该唯一
 	Name() string
 	// Equals 枚举对比
@@ -63,8 +66,6 @@ func (e Enum) Compare(other EnumDefinition) int {
 	return e.Ordinal() - other.Ordinal()
 }
 
-func (e Enum) Init(args ...any) any { return e }
-
 func (e Enum) MarshalJSON() ([]byte, error) {
 	return json.Marshal(e.Name())
 }
@@ -83,48 +84,65 @@ var type2enumsMap = make(map[string][]EnumDefinition)
 var typeIndexMap = make(map[string]int)
 
 // NewEnum 新建枚举, 如果枚举（同类型）已经存在，则会抛出panic，禁止重复创建枚举
-func NewEnum[T EnumDefinition](name string, args ...any) T {
+func NewEnum[T EnumDefinition](name string, src ...T) T {
 	if IsValidEnum[T](name) {
-		// panic还是直接返回已有的枚举？
 		panic("Enum must be unique")
 	}
 	var t T
-	elem := reflect.ValueOf(&t).Elem()
-	enumFiled := elem.FieldByName(reflect.TypeOf(Enum{}).Name())
-	// 获取泛型具体类型名
-	tFullName := typeKey(elem.Type())
-	idx := typeIndexMap[tFullName]
-	enumFiled.Set(reflect.ValueOf(Enum{name: name, _type: tFullName, index: idx}))
-	typeIndexMap[tFullName] = idx + 1
-	res := t.Init(args...)
-	if updated, ok := res.(T); ok {
-		t = updated
+	if len(src) > 0 {
+		t = src[0]
 	}
+	v := reflect.ValueOf(t)
+	var elem reflect.Value
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			elem = reflect.Indirect(reflect.New(v.Type().Elem()))
+		} else {
+			elem = reflect.Indirect(v)
+		}
+	} else {
+		elem = reflect.ValueOf(&t).Elem()
+	}
+	enumFiled := elem.FieldByName(reflect.TypeOf(Enum{}).Name())
+
+	// 获取泛型具体类型名
+	tFullName := typeKey(v.Type())
+	idx := typeIndexMap[tFullName]
+	e := Enum{name: name, _type: tFullName, index: idx}
+	if enumFiled.Kind() == reflect.Ptr {
+		enumFiled.Set(reflect.ValueOf(&e))
+	} else {
+		enumFiled.Set(reflect.ValueOf(e))
+	}
+	typeIndexMap[tFullName] = idx + 1
+
 	type2enumsMap[tFullName] = append(type2enumsMap[tFullName], t)
 	name2enumsMap[name] = append(name2enumsMap[name], t)
 	return t
 }
 
 // ValueOf 根据字符串获取枚举，如果找不到，则返回nil
-func ValueOf[T EnumDefinition](name string) *T {
+func ValueOf[T EnumDefinition](name string) (t T, err error) {
 	enums := name2enumsMap[name]
 	for _, e := range enums {
 		if v, ok := e.(T); ok {
-			return &v
+			return v, nil
 		}
 	}
-	return nil
+	err = ErrEnumNotFound
+	return
 }
 
 // ValueOfIgnoreCase 忽略大小写获取枚举, 涉及到一次反射调用，性能比ValueOf略差
-func ValueOfIgnoreCase[T EnumDefinition](name string) *T {
+func ValueOfIgnoreCase[T EnumDefinition](name string) (t T, err error) {
 	values := Values[T]()
 	for _, e := range values {
 		if strings.EqualFold(e.Name(), name) {
-			return &e
+			return e, nil
 		}
 	}
-	return nil
+	err = ErrEnumNotFound
+	return
 }
 
 // Values 返回所有可用枚举，返回slice是有序的，按照ordinal排序
@@ -165,18 +183,23 @@ func EnumNames[T EnumDefinition](enums ...T) (names []string) {
 }
 
 // GetEnums 根据枚举名字列表获得一批枚举
-func GetEnums[T EnumDefinition](names ...string) (res []T) {
+func GetEnums[T EnumDefinition](names ...string) (res []T, err error) {
 	for _, n := range names {
-		res = append(res, *ValueOf[T](n))
+		t, err := ValueOf[T](n)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, t)
 	}
 	return
 }
 
 // IsValidEnum 判断是否是合法的枚举
 func IsValidEnum[T EnumDefinition](name string) bool {
-	return ValueOf[T](name) != nil
+	_, err := ValueOf[T](name)
+	return err == nil
 }
 
 func typeKey(t reflect.Type) string {
-	return t.PkgPath() + "." + t.Name()
+	return t.String()
 }

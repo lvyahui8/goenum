@@ -23,7 +23,8 @@ func TestRoleBasic(t *testing.T) {
 	})
 	t.Run("Equals", func(t *testing.T) {
 		// valueOf测试
-		r := *goenum.ValueOf[Role]("Reporter")
+		r, err := goenum.ValueOf[Role]("Reporter")
+		require.Nil(t, err)
 		require.True(t, Reporter.Equals(r))
 		require.True(t, r.Equals(r))
 		require.False(t, Developer.Equals(Reporter))
@@ -64,12 +65,20 @@ func TestHelpers(t *testing.T) {
 		_ = goenum.NewEnum[Role]("Owner")
 	})
 	t.Run("ValueOf", func(t *testing.T) {
-		require.True(t, Owner.Equals(*goenum.ValueOf[Role]("Owner")))
-		require.False(t, Developer.Equals(*goenum.ValueOf[Role]("Owner")))
+		r, err := goenum.ValueOf[Role]("Owner")
+		require.Nil(t, err)
+		require.True(t, Owner.Equals(r))
+		r, err = goenum.ValueOf[Role]("Owner")
+		require.Nil(t, err)
+		require.False(t, Developer.Equals(r))
 	})
 	t.Run("ValueOfIgnoreCase", func(t *testing.T) {
-		require.True(t, Owner.Equals(*goenum.ValueOfIgnoreCase[Role]("oWnEr")))
-		require.False(t, Reporter.Equals(*goenum.ValueOfIgnoreCase[Role]("oWnEr")))
+		r, err := goenum.ValueOfIgnoreCase[Role]("oWnEr")
+		require.Nil(t, err)
+		require.True(t, Owner.Equals(r))
+		r, err = goenum.ValueOfIgnoreCase[Role]("oWnEr")
+		require.Nil(t, err)
+		require.False(t, Reporter.Equals(r))
 	})
 	t.Run("Values", func(t *testing.T) {
 		require.True(t, reflect.DeepEqual([]Role{Reporter, Developer, Owner}, goenum.Values[Role]()))
@@ -85,7 +94,9 @@ func TestHelpers(t *testing.T) {
 		require.True(t, reflect.DeepEqual([]string{"Owner", "Developer"}, goenum.EnumNames(Owner, Developer)))
 	})
 	t.Run("GetEnums", func(t *testing.T) {
-		require.True(t, reflect.DeepEqual([]Role{Owner, Developer}, goenum.GetEnums[Role]("Owner", "Developer")))
+		res, err := goenum.GetEnums[Role]("Owner", "Developer")
+		require.Nil(t, err)
+		require.True(t, reflect.DeepEqual([]Role{Owner, Developer}, res))
 	})
 	t.Run("IsValidEnum", func(t *testing.T) {
 		require.True(t, goenum.IsValidEnum[Role]("Owner"))
@@ -111,12 +122,12 @@ func BenchmarkValueOf(b *testing.B) {
 	n := 1000
 	b.Run("ValueOf", func(b *testing.B) {
 		for i := 0; i < n; i++ {
-			_ = goenum.ValueOf[Permission]("AddTopic")
+			_, _ = goenum.ValueOf[Permission]("AddTopic")
 		}
 	})
 	b.Run("ValueOfIgnoreCase", func(b *testing.B) {
 		for i := 0; i < n; i++ {
-			_ = goenum.ValueOfIgnoreCase[Permission]("AddTopic")
+			_, _ = goenum.ValueOfIgnoreCase[Permission]("AddTopic")
 		}
 	})
 }
