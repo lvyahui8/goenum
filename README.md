@@ -30,9 +30,16 @@ var (
 // Usage
 Created.Name() // string "Created"
 Created.Ordinal() // int 0
-goenum.ValueOf[State]("Created") // struct instance: Created
-Created.Equals(*goenum.ValueOf[State]("Created")) // true
+Created.Compare(Running) //  < 0 : Created < Running
+Created.String() // Created
+json.Marshal(Created) // \"Created\"
+IsValidEnum[State]("Created") // true
+s,valid := goenum.ValueOf[State]("Created") // s: Created(struct instance) ,valid = true
+Created.Equals(s) // true
+s,valid := goenum.ValueOf[State]("cReaTed") //  s: Created(struct instance) ,valid = true
+Created.Equals(s) // true
 goenum.Values[State]() // equals []State{Created,Running,Success}
+Size[State]() // = 3
 ```
 
 ### 实例方法
@@ -43,8 +50,8 @@ type EnumDefinition interface {
     fmt.Stringer
     // Marshaler 支持枚举序列化
     json.Marshaler
-    // Init 枚举初始化。使用方不应该直接调用这个方法。
-    Init(args ...any) any
+    // TextMarshaler 支持枚举序列化
+    encoding.TextMarshaler
     // Name 枚举名称，同一类型枚举应该唯一
     Name() string
     // Equals 枚举对比
@@ -61,44 +68,63 @@ type EnumDefinition interface {
 ### 工具方法
 
 - ValueOf 根据字符串获取枚举，如果找不到，则返回nil
-
 - ValueOfIgnoreCase 忽略大小写获取枚举, 涉及到一次反射调用，性能比ValueOf略差
-
 - Values 返回所有枚举
-
 - GetEnumMap 获取所有枚举，以name->enum map的形式返回
-
 - EnumNames  获取一批枚举的名称
 - GetEnums 根据枚举名字列表获得一批枚举
 - IsValidEnum 判断是否是合法的枚举
 
 ```go
 func TestHelpers(t *testing.T) {
-    t.Run("ValueOf", func(t *testing.T) {
-        require.True(t, Owner.Equals(*goenum.ValueOf[Role]("Owner")))
-        require.False(t, Developer.Equals(*goenum.ValueOf[Role]("Owner")))
-    })
-    t.Run("ValueOfIgnoreCase", func(t *testing.T) {
-        require.True(t, Owner.Equals(*goenum.ValueOfIgnoreCase[Role]("oWnEr")))
-        require.False(t, Reporter.Equals(*goenum.ValueOfIgnoreCase[Role]("oWnEr")))
-    })
-    t.Run("Values", func(t *testing.T) {
-        require.True(t, reflect.DeepEqual([]Role{Reporter, Developer, Owner}, goenum.Values[Role]()))
-    })
-    t.Run("GetEnumMap", func(t *testing.T) {
-        enumMap := goenum.GetEnumMap[Role]()
-        require.True(t, len(enumMap) == 3)
-        role, exist := enumMap["Owner"]
-        require.True(t, exist)
-        require.True(t, role.Equals(Owner))
-    })
-    t.Run("EnumNames", func(t *testing.T) {
-        require.True(t, reflect.DeepEqual([]string{"Owner", "Developer"}, goenum.EnumNames(Owner, Developer)))
-    })
-    t.Run("IsValidEnum", func(t *testing.T) {
-        require.True(t, goenum.IsValidEnum[Role]("Owner"))
-        require.False(t, goenum.IsValidEnum[Role]("Test"))
-    })
+	t.Run("NewEnum", func(t *testing.T) {
+		defer func() {
+			err := recover()
+			require.NotNil(t, err)
+			require.Equal(t, "Enum must be unique", err)
+		}()
+		_ = goenum.NewEnum[Role]("Owner")
+	})
+	t.Run("ValueOf", func(t *testing.T) {
+		r, valid := goenum.ValueOf[Role]("Owner")
+		require.True(t, valid)
+		require.True(t, Owner.Equals(r))
+		r, valid = goenum.ValueOf[Role]("Owner")
+		require.True(t, valid)
+		require.False(t, Developer.Equals(r))
+	})
+	t.Run("ValueOfIgnoreCase", func(t *testing.T) {
+		r, valid := goenum.ValueOfIgnoreCase[Role]("oWnEr")
+		require.True(t, valid)
+		require.True(t, Owner.Equals(r))
+		r, valid = goenum.ValueOfIgnoreCase[Role]("oWnEr")
+		require.True(t, valid)
+		require.False(t, Reporter.Equals(r))
+	})
+	t.Run("Values", func(t *testing.T) {
+		require.True(t, reflect.DeepEqual([]Role{Reporter, Developer, Owner}, goenum.Values[Role]()))
+	})
+	t.Run("GetEnumMap", func(t *testing.T) {
+		enumMap := goenum.GetEnumMap[Role]()
+		require.True(t, len(enumMap) == 3)
+		role, exist := enumMap["Owner"]
+		require.True(t, exist)
+		require.True(t, role.Equals(Owner))
+	})
+	t.Run("EnumNames", func(t *testing.T) {
+		require.True(t, reflect.DeepEqual([]string{"Owner", "Developer"}, goenum.EnumNames(Owner, Developer)))
+	})
+	t.Run("GetEnums", func(t *testing.T) {
+		res, valid := goenum.GetEnums[Role]("Owner", "Developer")
+		require.True(t, valid)
+		require.True(t, reflect.DeepEqual([]Role{Owner, Developer}, res))
+		_, valid = goenum.GetEnums[Role]("a", "b")
+		require.False(t, valid)
+	})
+	t.Run("IsValidEnum", func(t *testing.T) {
+		require.True(t, goenum.IsValidEnum[Role]("Owner"))
+		require.False(t, goenum.IsValidEnum[Role]("Test"))
+	})
 }
 ```
 
@@ -106,36 +132,29 @@ func TestHelpers(t *testing.T) {
 
 #### 复杂枚举初始化
 
-枚举struct 实现Init方法即可，NewEnum方法中的args参数，会完整透传给Init方法，注意，**Init方法需要将receiver返回以确保初始化生效**。
+NewEnum方法中的第二个参数，如果有传入一个src，NewEnum将使用传入的对象构造枚举对象。
 
 完整例子请看 [gitlab_role_perms](internal/role_enums.go)
 
 ```go
 type Module struct {
-    goenum.Enum
-    perms    []Permission
-    basePath string
-}
-
-func (m Module) Init(args ...any) any {
-    m.perms = args[0].([]Permission)
-    m.basePath = args[1].(string)
-    return m
+	goenum.Enum
+	perms    []Permission
+	basePath string
 }
 
 func (m Module) GetPerms() []Permission {
-    return m.perms
+	return m.perms
 }
 
 func (m Module) BasePath() string {
-    return m.basePath
+	return m.basePath
 }
-
 
 // 定义模块
 var (
-    Issues        = goenum.NewEnum[Module]("Issues", []Permission{AddLabels, AddTopic}, "/issues/")
-    MergeRequests = goenum.NewEnum[Module]("MergeRequests", []Permission{ViewMergeRequest, ApproveMergeRequest, DeleteMergeRequest}, "/merge/")
+	Issues        = goenum.NewEnum[Module]("Issues", Module{perms: []Permission{AddLabels, AddTopic}, basePath: "/issues/"})
+	MergeRequests = goenum.NewEnum[Module]("MergeRequests", Module{perms: []Permission{ViewMergeRequest, ApproveMergeRequest, DeleteMergeRequest}, basePath: "/merge/"})
 )
 ```
 
