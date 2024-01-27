@@ -97,6 +97,8 @@ func TestHelpers(t *testing.T) {
 		res, valid := goenum.GetEnums[Role]("Owner", "Developer")
 		require.True(t, valid)
 		require.True(t, reflect.DeepEqual([]Role{Owner, Developer}, res))
+		_, valid = goenum.GetEnums[Role]("a", "b")
+		require.False(t, valid)
 	})
 	t.Run("IsValidEnum", func(t *testing.T) {
 		require.True(t, goenum.IsValidEnum[Role]("Owner"))
@@ -112,8 +114,9 @@ func TestRole_HasPerm(t *testing.T) {
 }
 
 func TestModule_BasePath(t *testing.T) {
-	require.True(t, len(Issues.basePath) > 0)
-	require.True(t, len(MergeRequests.basePath) > 0)
+	require.True(t, len(Issues.BasePath()) > 0)
+	require.True(t, len(Issues.GetPerms()) > 0)
+	require.True(t, len(MergeRequests.BasePath()) > 0)
 }
 
 // BenchmarkValueOf

@@ -23,12 +23,6 @@ type Module struct {
 	basePath string
 }
 
-func (m Module) Init(args ...any) any {
-	m.perms = args[0].([]Permission)
-	m.basePath = args[1].(string)
-	return m
-}
-
 func (m Module) GetPerms() []Permission {
 	return m.perms
 }
