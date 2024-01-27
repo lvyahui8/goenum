@@ -3,6 +3,7 @@ package goenum
 import (
 	"encoding"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -138,6 +139,19 @@ func ValueOfIgnoreCase[T EnumDefinition](name string) (t T, valid bool) {
 		if strings.EqualFold(e.Name(), name) {
 			return e, true
 		}
+	}
+	return
+}
+
+func Unmarshal[T EnumDefinition](data []byte) (t T, err error) {
+	var name string
+	err = json.Unmarshal(data, &name)
+	if err != nil {
+		return
+	}
+	t, valid := ValueOf[T](name)
+	if !valid {
+		return t, errors.New("enum not found")
 	}
 	return
 }

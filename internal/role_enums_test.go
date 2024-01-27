@@ -9,7 +9,7 @@ import (
 )
 
 type Member struct {
-	RoleName Role
+	Roles []Role
 }
 
 func TestRoleBasic(t *testing.T) {
@@ -38,10 +38,16 @@ func TestRoleBasic(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, "\"Developer\"", string(bytes))
 		// 测试枚举序列化功能
-		member := Member{RoleName: Reporter}
+		member := Member{Roles: []Role{Reporter, Owner}}
 		bytes, err = json.Marshal(member)
 		require.Nil(t, err)
-		require.Equal(t, "{\"RoleName\":\"Reporter\"}", string(bytes))
+		require.Equal(t, "{\"Roles\":[\"Reporter\",\"Owner\"]}", string(bytes))
+	})
+	t.Run("jsonUnmarshal", func(t *testing.T) {
+		newMember := Member{}
+		err := json.Unmarshal([]byte("{\"Roles\":[\"Reporter\",\"Owner\"]}"), &newMember)
+		require.Nil(t, err)
+		require.True(t, reflect.DeepEqual([]Role{Reporter, Owner}, newMember.Roles))
 	})
 	t.Run("textMarshal", func(t *testing.T) {
 		var m = make(map[*Role]int)

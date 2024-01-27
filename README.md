@@ -158,6 +158,47 @@ var (
 )
 ```
 
+#### 枚举json序列化和反序列化支持
+
+默认已支持了json序列化，受限于go json库的反序列化机制限制，需要枚举类自行实现json.Unmarshaler接口，在接口中调用工具方法即可。
+
+```go
+type Member struct {
+	Roles []Role
+}
+
+type Role struct {
+	goenum.Enum
+	perms []Permission
+}
+// UnmarshalJSON 枚举类需要自行实现json.Unmarshaler接口
+func (r *Role) UnmarshalJSON(data []byte) error {
+	role, err := goenum.Unmarshal[Role](data)
+	if err != nil {
+		return err
+	}
+	*r = role
+	return nil
+}
+
+t.Run("jsonMarshal", func(t *testing.T) {
+    bytes, err := json.Marshal(Developer)
+    require.Nil(t, err)
+    require.Equal(t, "\"Developer\"", string(bytes))
+    // 测试枚举序列化功能
+    member := Member{Roles: []Role{Reporter, Owner}}
+    bytes, err = json.Marshal(member)
+    require.Nil(t, err)
+    require.Equal(t, "{\"Roles\":[\"Reporter\",\"Owner\"]}", string(bytes))
+})
+t.Run("jsonUnmarshal", func(t *testing.T) {
+    newMember := Member{}
+    err := json.Unmarshal([]byte("{\"Roles\":[\"Reporter\",\"Owner\"]}"), &newMember)
+    require.Nil(t, err)
+    require.True(t, reflect.DeepEqual([]Role{Reporter, Owner}, newMember.Roles))
+})
+```
+
 #### EnumSet
 
 api声明

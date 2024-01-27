@@ -1,6 +1,8 @@
 package internal
 
-import "github.com/lvyahui8/goenum"
+import (
+	"github.com/lvyahui8/goenum"
+)
 
 // Role 参考 https://docs.gitlab.com/ee/user/permissions.html
 type Role struct {
@@ -8,7 +10,16 @@ type Role struct {
 	perms []Permission
 }
 
-func (r Role) HasPerm(p Permission) bool {
+func (r *Role) UnmarshalJSON(data []byte) error {
+	role, err := goenum.Unmarshal[Role](data)
+	if err != nil {
+		return err
+	}
+	*r = role
+	return nil
+}
+
+func (r *Role) HasPerm(p Permission) bool {
 	for _, perm := range r.perms {
 		if p.Equals(perm) {
 			return true
