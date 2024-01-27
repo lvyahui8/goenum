@@ -7,6 +7,6 @@ type ColorEnum struct {
 }
 
 var (
-	red    = goenum.NewEnum[*ColorEnum]("red")
-	yellow = goenum.NewEnum[*ColorEnum]("yellow")
+	Red    = goenum.NewEnum[*ColorEnum]("Red")
+	Yellow = goenum.NewEnum[*ColorEnum]("Yellow")
 )
