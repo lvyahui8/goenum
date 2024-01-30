@@ -10,13 +10,13 @@ type Role struct {
 	perms []Permission
 }
 
-func (r *Role) UnmarshalJSON(data []byte) error {
+// UnmarshalJSON 枚举类需要自行实现json.Unmarshaler接口
+func (r *Role) UnmarshalJSON(data []byte) (err error) {
 	role, err := goenum.Unmarshal[Role](data)
-	if err != nil {
-		return err
+	if err == nil {
+		*r = role
 	}
-	*r = role
-	return nil
+	return
 }
 
 func (r *Role) HasPerm(p Permission) bool {
