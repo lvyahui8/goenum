@@ -42,6 +42,8 @@ goenum.Values[State]() // equals []State{Created,Running,Success}
 Size[State]() // = 3
 ```
 
+更多示例 [examples](internal)
+
 ### 实例方法
 
 ```go
