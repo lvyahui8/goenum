@@ -3,7 +3,7 @@ package internal
 import "github.com/lvyahui8/goenum"
 
 type ColorEnum struct {
-	*goenum.Enum
+	*goenum.Enum // 支持组合指针，NewEnum传入相应的也需要指针类型
 }
 
 var (
