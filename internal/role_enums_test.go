@@ -125,6 +125,18 @@ func TestModule_BasePath(t *testing.T) {
 	require.True(t, len(MergeRequests.BasePath()) > 0)
 }
 
+func TestSwitch(t *testing.T) {
+	r := Owner
+	v := 0
+	switch r.Name() {
+	case Reporter.Name():
+		v = 1
+	case Owner.Name():
+		v = 2
+	}
+	require.Equal(t, 2, v)
+}
+
 // BenchmarkValueOf
 //  go test -bench='BenchmarkValueOf'  -benchtime=5s -benchmem -count=3
 func BenchmarkValueOf(b *testing.B) {
