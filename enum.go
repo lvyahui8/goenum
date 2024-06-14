@@ -187,6 +187,9 @@ func GetEnumMap[T EnumDefinition]() map[string]T {
 
 // EnumNames 获取一批枚举的名称
 func EnumNames[T EnumDefinition](enums ...T) (names []string) {
+	if len(enums) == 0 {
+		enums = Values[T]()
+	}
 	for _, e := range enums {
 		names = append(names, e.Name())
 	}
