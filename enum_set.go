@@ -6,37 +6,42 @@ import (
 	"strings"
 )
 
-// EnumSet 枚举set，一般在枚举非常多时使用
+// EnumSet Enumerate sets. Usually used for high-performance lookup when
+// there are many instances of a certain type of enumeration.
 type EnumSet[E EnumDefinition] interface {
-	// Stringer 支持标准输出及格式化
 	fmt.Stringer
-	// Marshaler 支持json序列化
 	json.Marshaler
-	// Add 往set添加元素，添加成功则返回true，如果已经存在则返回false
+	// Add -Add an element to Set. If successful, return true. If it already exists, return false
 	Add(e E) bool
-	// AddRange 按照枚举的序数，连续添加一段枚举，返回实际添加的数量（排除已经存在的）
+	// AddRange According to the ordinal of the enumeration,
+	// add a continuous section of the enumeration and
+	// return the actual number added (excluding those that already exist)
 	AddRange(begin, end E) int
-	// Remove 删除元素，删除成功则返回true，如果元素原本不存在则返回false
+	// Remove Delete element. If the deletion is successful, return true.
+	// If the element does not exist, return false
 	Remove(e E) bool
-	// RemoveRange  按照枚举的序数，连续删除一段枚举，返回实际删除的数量（排除原本不存在的）
+	// RemoveRange  According to the ordinal of the enumeration,
+	// continuously delete a segment of the enumeration and
+	// return the actual number of deletions  (excluding those that non-exist)
 	RemoveRange(begin, end E) int
-	// IsEmpty set是否为空
+	// IsEmpty Is Set empty
 	IsEmpty() bool
-	// Clear 清理set
+	// Clear -Clear set
 	Clear()
-	// Len set内当前的枚举数量
+	// Len The current number of enumeration instances within the Set
 	Len() int
-	// Contains 是否包含指定的枚举，只要有1个不存在则返回false
+	// Contains Does it contain the specified enumeration?
+	// Returns false if there is only one that does not exist in the Set
 	Contains(enums ...E) bool
-	// ContainsAll  判断是否包含另外一个enumSet（子集关系）
+	// ContainsAll  Determine if it contains another enumSet (subset relationship)
 	ContainsAll(set EnumSet[E]) bool
-	// Equals 判断两个EnumSet是否相同
+	// Equals Determine if two EnumSets are the same
 	Equals(set EnumSet[E]) bool
-	// Each set迭代方法, f方法如果返回false，则中止迭代
+	// Each Set iteration method, if f method returns false, abort iteration
 	Each(f func(e E) bool)
-	// Names 返回set中已有枚举的Name表示
+	// Names Returns the Name representation of an existing enumeration instance in the set
 	Names() []string
-	// Clone 深拷贝一份set
+	// Clone Deep copy to obtain a new set
 	Clone() EnumSet[E]
 }
 

@@ -10,21 +10,18 @@ import (
 )
 
 type EnumDefinition interface {
-	// Stringer 支持打印输出
 	fmt.Stringer
-	// Marshaler 支持枚举序列化
 	json.Marshaler
-	// TextMarshaler 支持枚举序列化
 	encoding.TextMarshaler
-	// Name 枚举名称，同一类型枚举应该唯一
+	// Name The name of the enumeration. The enumeration names of the same Type must be unique.
 	Name() string
-	// Equals 枚举对比
+	// Equals Compare with another enumeration. Only return true if both Type and Name are the same
 	Equals(other EnumDefinition) bool
-	// Type 实际的枚举类型
+	// Type String representation of enumeration type
 	Type() string
-	// Ordinal 获取枚举序数
+	// Ordinal Get the ordinal of the enumeration, starting from zero and increasing in declared order.
 	Ordinal() int
-	// Compare 枚举比较方法
+	// Compare -Compare with the ordinal value of another enumeration
 	Compare(other EnumDefinition) int
 }
 
@@ -42,7 +39,6 @@ func (e Enum) Equals(other EnumDefinition) bool {
 	if e.Name() != other.Name() {
 		return false
 	}
-	// 比较类型
 	return e._type == other.Type()
 }
 
@@ -70,16 +66,19 @@ func (e Enum) MarshalText() (text []byte, err error) {
 	return []byte(e.Name()), nil
 }
 
-// name2enumsMap name到枚举实例的映射，不同的枚举，name可能冲突，所以value是slice
+// name2enumsMap Name to enumeration instance mapping.
+// Value uses slice to store enumeration instances with different types but conflicting names
 var name2enumsMap = make(map[string][]EnumDefinition)
 
-// type2enumsMap 枚举类型到所有枚举的映射，key为枚举类型的全路径名称
+// type2enumsMap The mapping from enumeration type to all enumerations,
+// where key is the string representation of the enumeration type
 var type2enumsMap = make(map[string][]EnumDefinition)
 
-// typeIndexMap 类型枚举索引
+// typeIndexMap Store instance counters of different enumeration types for calculating Ordinal.
 var typeIndexMap = make(map[string]int)
 
-// NewEnum 新建枚举, 如果枚举（同类型）已经存在，则会抛出panic，禁止重复创建枚举
+// NewEnum Create a new enumeration. If an enumeration instance with the same Type and Name already exists,
+// the current method will throw a panic to prevent duplicate enumeration creation
 func NewEnum[T EnumDefinition](name string, src ...T) T {
 	if IsValidEnum[T](name) {
 		panic("Enum must be unique")
@@ -89,7 +88,6 @@ func NewEnum[T EnumDefinition](name string, src ...T) T {
 		t = src[0]
 	}
 	v := reflect.ValueOf(t)
-	// 获取泛型具体类型名
 	tFullName := typeKey(v.Type())
 
 	isPtr := v.Kind() == reflect.Ptr
@@ -121,7 +119,7 @@ func NewEnum[T EnumDefinition](name string, src ...T) T {
 	return t
 }
 
-// ValueOf 根据字符串获取枚举，如果找不到，则返回nil
+// ValueOf Find an enumeration instance based on the string, and return a zero value if not found
 func ValueOf[T EnumDefinition](name string) (t T, valid bool) {
 	enums := name2enumsMap[name]
 	for _, e := range enums {
@@ -132,7 +130,9 @@ func ValueOf[T EnumDefinition](name string) (t T, valid bool) {
 	return
 }
 
-// ValueOfIgnoreCase 忽略大小写获取枚举, 涉及到一次反射调用，性能比ValueOf略差
+// ValueOfIgnoreCase Ignoring case to obtain enumeration instances.
+// Note: This method involves one reflection call,
+// and its performance is slightly worse than the ValueOf method
 func ValueOfIgnoreCase[T EnumDefinition](name string) (t T, valid bool) {
 	values := Values[T]()
 	for _, e := range values {
@@ -143,6 +143,8 @@ func ValueOfIgnoreCase[T EnumDefinition](name string) (t T, valid bool) {
 	return
 }
 
+// Unmarshal Deserialize the enumeration instance from the JSON string,
+// and return an error if not found
 func Unmarshal[T EnumDefinition](data []byte) (t T, err error) {
 	var name string
 	err = json.Unmarshal(data, &name)
@@ -156,7 +158,7 @@ func Unmarshal[T EnumDefinition](data []byte) (t T, err error) {
 	return
 }
 
-// Values 返回所有可用枚举，返回slice是有序的，按照ordinal排序
+// Values Return all enumeration instances. The returned slice are sorted by ordinal
 func Values[T EnumDefinition]() []T {
 	var t T
 	var res []T
@@ -175,7 +177,8 @@ func Size[T EnumDefinition]() int {
 	return len(type2enumsMap[tName])
 }
 
-// GetEnumMap 获取所有枚举，以name->enum map的形式返回
+// GetEnumMap Get all enumeration instances of the specified type.
+// The key is the Name of the enumeration instance, and the value is the enumeration instance.
 func GetEnumMap[T EnumDefinition]() map[string]T {
 	values := Values[T]()
 	res := make(map[string]T)
@@ -185,7 +188,8 @@ func GetEnumMap[T EnumDefinition]() map[string]T {
 	return res
 }
 
-// EnumNames 获取一批枚举的名称
+// EnumNames Get the names of a batch of enumerations. If no instances are passed in,
+// return the Name value of all enumeration instances of the type specified by the generic parameter.
 func EnumNames[T EnumDefinition](enums ...T) (names []string) {
 	if len(enums) == 0 {
 		enums = Values[T]()
@@ -196,7 +200,7 @@ func EnumNames[T EnumDefinition](enums ...T) (names []string) {
 	return
 }
 
-// GetEnums 根据枚举名字列表获得一批枚举
+// GetEnums Obtain a batch of enumeration instances based on the enumeration name list
 func GetEnums[T EnumDefinition](names ...string) (res []T, valid bool) {
 	for _, n := range names {
 		t, valid := ValueOf[T](n)
@@ -209,7 +213,7 @@ func GetEnums[T EnumDefinition](names ...string) (res []T, valid bool) {
 	return
 }
 
-// IsValidEnum 判断是否是合法的枚举
+// IsValidEnum Determine if the incoming string is a valid enumeration
 func IsValidEnum[T EnumDefinition](name string) (valid bool) {
 	_, valid = ValueOf[T](name)
 	return
