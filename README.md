@@ -184,7 +184,6 @@ t.Run("jsonMarshal", func(t *testing.T) {
     bytes, err := json.Marshal(Developer)
     require.Nil(t, err)
     require.Equal(t, "\"Developer\"", string(bytes))
-    // 测试枚举序列化功能
     member := Member{Roles: []Role{Reporter, Owner}}
     bytes, err = json.Marshal(member)
     require.Nil(t, err)
