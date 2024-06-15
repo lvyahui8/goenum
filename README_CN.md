@@ -1,12 +1,12 @@
-## Go enumeration template implementation
+## Go 通用枚举实现
 
 [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lvyahui8/goenum)](https://goreportcard.com/report/github.com/lvyahui8/goenum)
 [![codecov](https://codecov.io/gh/lvyahui8/goenum/graph/badge.svg?token=YBV3TH2HQU)](https://codecov.io/gh/lvyahui8/goenum)
 
-### How to define and use enumerations?
+### 怎么定义和使用枚举？
 
-**Simply embed goenum.Enum into a struct to define an enumeration type and automatically obtain a set of instance methods and utility functions.**
+**只需往枚举struct内嵌goenum.Enum, 即可定义一个枚举类型，并获得开箱即用的一组方法。**
 
 ```shell
 go get github.com/lvyahui8/goenum
@@ -15,12 +15,12 @@ go get github.com/lvyahui8/goenum
 ```go
 import "github.com/lvyahui8/goenum"
 
-// Declaring an enumeration type
+// 声明枚举类型
 type State struct {
     goenum.Enum
 }
 
-// Defines a set of enumeration instances
+// 定义枚举
 var (
     Created = goenum.NewEnum[State]("Created")
     Running = goenum.NewEnum[State]("Running")
@@ -42,38 +42,41 @@ goenum.Values[State]() // equals []State{Created,Running,Success}
 Size[State]() // = 3
 ```
 
-More Examples [examples](internal)
+更多示例 [examples](internal)
 
-### Instance Methods
+### 实例方法
 
 ```go
 type EnumDefinition interface {
+    // Stringer 支持打印输出
     fmt.Stringer
+    // Marshaler 支持枚举序列化
     json.Marshaler
+    // TextMarshaler 支持枚举序列化
     encoding.TextMarshaler
-    // Name The name of the enumeration. The enumeration names of the same Type must be unique.
+    // Name 枚举名称，同一类型枚举应该唯一
     Name() string
-    // Equals Compare with another enumeration. Only return true if both Type and Name are the same
+    // Equals 枚举对比
     Equals(other EnumDefinition) bool
-    // Type String representation of enumeration type
+    // Type 实际的枚举类型
     Type() string
-    // Ordinal Get the ordinal of the enumeration, starting from zero and increasing in declared order.
+    // Ordinal 获取枚举序数
     Ordinal() int
-    // Compare -Compare with the ordinal value of another enumeration
+    // Compare 枚举比较方法
     Compare(other EnumDefinition) int
 }
 ```
 
-### Utility functions
+### 工具方法
 
-- ValueOf: Find an enumeration instance based on the string, and return a zero value if not found
-- ValueOfIgnoreCase: Ignoring case to obtain enumeration instances.
-- Values: Return all enumeration instances. The returned slice are sorted by ordinal
-- Size: Number of instances of specified enumeration type
-- GetEnumMap: Get all enumeration instances of the specified type.
-- EnumNames: Get the names of a batch of enumerations.
-- GetEnums: Obtain a batch of enumeration instances based on the enumeration name list
-- IsValidEnum: Determine if the incoming string is a valid enumeration 
+- ValueOf 根据字符串获取枚举，如果找不到，则返回nil
+- ValueOfIgnoreCase 忽略大小写获取枚举, 涉及到一次反射调用，性能比ValueOf略差
+- Values 返回所有枚举
+- Size: 指定枚举类型的实例数量
+- GetEnumMap 获取所有枚举，以name->enum map的形式返回
+- EnumNames  获取一批枚举的名称
+- GetEnums 根据枚举名字列表获得一批枚举
+- IsValidEnum 判断是否是合法的枚举
 
 ```go
 func TestHelpers(t *testing.T) {
@@ -128,13 +131,13 @@ func TestHelpers(t *testing.T) {
 }
 ```
 
-### More features
+### 更多特性支持
 
-#### Complex enumeration initialization
+#### 复杂枚举初始化
 
-The second parameter in the NewEnum function, if a Src is passed in, NewEnum will use the passed object to construct an enumeration instance.
+NewEnum方法中的第二个参数，如果有传入一个src，NewEnum将使用传入的对象构造枚举对象。
 
-example code [gitlab_role_perms](internal/role_enums.go)
+完整例子请看 [gitlab_role_perms](internal/role_enums.go)
 
 ```go
 type Module struct {
@@ -158,9 +161,9 @@ var (
 )
 ```
 
-#### JSON serialization and deserialization support for enumerating instances
+#### 枚举json序列化和反序列化支持
 
-JSON serialization is already supported by default. Restricted by the implementation of the go JSON library, enumeration classes are required to implement JSON Unmarshaler interface to realize deserialization. Call Unmarshal tool function in the interface to obtain enumeration instances.
+默认已支持了json序列化，受限于go json库的反序列化机制限制，需要枚举类自行实现json.Unmarshaler接口，在接口中调用工具方法即可。
 
 ```go
 type Member struct {
@@ -171,7 +174,7 @@ type Role struct {
 	goenum.Enum
 	perms []Permission
 }
-
+// UnmarshalJSON 枚举类需要自行实现json.Unmarshaler接口
 func (r *Role) UnmarshalJSON(data []byte) (err error) {
 	role, err := goenum.Unmarshal[Role](data)
 	if err == nil {
@@ -202,43 +205,38 @@ t.Run("jsonUnmarshal", func(t *testing.T) {
 
 api声明
 ```go
-// EnumSet Enumerate sets. Usually used for high-performance lookup when
-// there are many instances of a certain type of enumeration.
+// EnumSet 枚举set，一般在枚举非常多时使用
 type EnumSet[E EnumDefinition] interface {
-    fmt.Stringer
-    json.Marshaler
-    // Add -Add an element to Set. If successful, return true. If it already exists, return false
-    Add(e E) bool
-    // AddRange According to the ordinal of the enumeration,
-    // add a continuous section of the enumeration and
-    // return the actual number added (excluding those that already exist)
-    AddRange(begin, end E) int
-    // Remove Delete element. If the deletion is successful, return true.
-    // If the element does not exist, return false
-    Remove(e E) bool
-    // RemoveRange  According to the ordinal of the enumeration,
-    // continuously delete a segment of the enumeration and
-    // return the actual number of deletions  (excluding those that non-exist)
-    RemoveRange(begin, end E) int
-    // IsEmpty Is Set empty
-    IsEmpty() bool
-    // Clear -Clear set
-    Clear()
-    // Len The current number of enumeration instances within the Set
-    Len() int
-    // Contains Does it contain the specified enumeration?
-    // Returns false if there is only one that does not exist in the Set
-    Contains(enums ...E) bool
-    // ContainsAll  Determine if it contains another enumSet (subset relationship)
-    ContainsAll(set EnumSet[E]) bool
-    // Equals Determine if two EnumSets are the same
-    Equals(set EnumSet[E]) bool
-    // Each Set iteration method, if f method returns false, abort iteration
-    Each(f func(e E) bool)
-    // Names Returns the Name representation of an existing enumeration instance in the set
-    Names() []string
-    // Clone Deep copy to obtain a new set
-    Clone() EnumSet[E]
+	// Stringer 支持标准输出及格式化
+	fmt.Stringer
+	// Marshaler 支持json序列化
+	json.Marshaler
+	// Add 往set添加元素，添加成功则返回true，如果已经存在则返回false
+	Add(e E) bool
+	// AddRange 按照枚举的序数，连续添加一段枚举，返回实际添加的数量（排除已经存在的）
+	AddRange(begin, end E) int
+	// Remove 删除元素，删除成功则返回true，如果元素原本不存在则返回false
+	Remove(e E) bool
+	// RemoveRange  按照枚举的序数，连续删除一段枚举，返回实际删除的数量（排除原本不存在的）
+	RemoveRange(begin, end E) int
+	// IsEmpty set是否为空
+	IsEmpty() bool
+	// Clear 清理set
+	Clear()
+	// Len set内当前的枚举数量
+	Len() int
+	// Contains 是否包含指定的枚举，只要有1个不存在则返回false
+	Contains(enums ...E) bool
+	// ContainsAll  判断是否包含另外一个enumSet（子集关系）
+	ContainsAll(set EnumSet[E]) bool
+	// Equals 判断两个EnumSet是否相同
+	Equals(set EnumSet[E]) bool
+	// Each set迭代方法, f方法如果返回false，则中止迭代
+	Each(f func(e E) bool)
+	// Names 返回set中已有枚举的Name表示
+	Names() []string
+	// Clone 深拷贝一份set
+	Clone() EnumSet[E]
 }
 ```
 
@@ -255,11 +253,11 @@ stmtSet.AddRange(Comm, Range)
 stmtSet.Remove(Decl)
 ```
 
-Example code [enum_set_test](enum_set_test.go)
+完整例子请看 [enum_set_test](enum_set_test.go)
 
-### ValueOf Performance
+### ValueOf性能测试
 
-Don't worry about any performance issues, reflection calls are mostly only used in NewEnum methods, and other methods will try to avoid reflection calls as much as possible.
+不用担心任何性能问题，反射调用基本集中在NewEnum方法中，其他方法尽量避免反射调用。
 
 ```text
 goos: linux

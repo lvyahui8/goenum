@@ -171,6 +171,7 @@ func Values[T EnumDefinition]() []T {
 	return res
 }
 
+// Size Number of instances of specified enumeration type
 func Size[T EnumDefinition]() int {
 	var t T
 	tName := typeKey(reflect.TypeOf(t))
