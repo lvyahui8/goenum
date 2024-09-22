@@ -4,6 +4,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lvyahui8/goenum)](https://goreportcard.com/report/github.com/lvyahui8/goenum)
 [![codecov](https://codecov.io/gh/lvyahui8/goenum/graph/badge.svg?token=YBV3TH2HQU)](https://codecov.io/gh/lvyahui8/goenum)
 
+[中文文档](./README_CN.md)
+
 ### How to define and use enumerations?
 
 **Simply embed goenum.Enum into a struct to define an enumeration type and automatically obtain a set of instance methods and utility functions.**
